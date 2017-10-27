@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 
 import org.springframework.cache.annotation.EnableCaching;
 
@@ -18,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -218,6 +221,30 @@ public class UserController {
 		}
 
 		return "catalogue";
+	}
+	
+	@RequestMapping(value = "user/user_info", method = { RequestMethod.GET, RequestMethod.POST })
+	public String userInfo(Locale locale, Model model) {
+
+		return "user_info";
+	}
+	
+	@RequestMapping(value = "user/update_user", method = { RequestMethod.GET, RequestMethod.POST })
+	public String updateUser(@Valid @ModelAttribute("user") @Autowired User user, BindingResult bindingResult, Locale locale, Model model) {
+
+		if (!bindingResult.hasErrors()) {
+			try {
+				clientService.updateUserInfo(user);
+				bindingResult.rejectValue("message", "update done", "update done");
+			} catch (ServiceException e) {
+				model.addAttribute("message", e.getCause());
+				logger.error(e.getMessage(), e);
+				
+				return "error_page";
+			}
+		}
+		
+		return "user_info";
 	}
 
 }
